@@ -4,6 +4,10 @@ import http "./odin-http"
 import "core:fmt"
 import "core:mem"
 import "core:net"
+import "core:time"
+
+server: http.Server
+router: http.Router
 
 ip_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	remote_ip := net.address_to_string(req.client.address, context.temp_allocator)
@@ -23,16 +27,20 @@ mem_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_html(res, content)
 }
 
+now_handler :: proc(req: ^http.Request, res: ^http.Response) {
+	server_date := string(server.date.buf_backing[:])
+	real_date := time.time_to_rfc3339(time.now(), 0, false, context.temp_allocator) or_else "??"
+	content := fmt.tprintf("server_date = %s\nreal_date = %s", server_date, real_date)
+	http.respond_html(res, content)
+}
+
 main :: proc() {
-	// the server
-	server: http.Server
 	http.server_shutdown_on_interrupt(&server)
 
 	port := 8080
 	endpoint := net.Endpoint{net.IP4_Any, port}
 
 	// the router
-	router: http.Router
 	http.router_init(&router)
 	defer http.router_destroy(&router)
 
@@ -40,6 +48,7 @@ main :: proc() {
 	http.route_get(&router, "/ip", http.handler(ip_handler))
 	http.route_get(&router, "/up", http.handler(up_handler))
 	http.route_get(&router, "/mem", http.handler(mem_handler))
+	http.route_get(&router, "/now", http.handler(now_handler))
 
 	// listen
 	fmt.printf("Listening on :%d\n", port)
