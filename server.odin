@@ -21,6 +21,7 @@ main :: proc() {
 	defer http.router_destroy(&router)
 
 	// configure the routes
+	http.route_get(&router, "/url", http.handler(url))
 	http.route_get(&router, "/params/(%w+)/(%w+)", http.handler(url_params))
 	http.route_get(&router, "/headers", http.handler(headers))
 	http.route_get(&router, "/html", http.handler(html_file))
@@ -43,6 +44,16 @@ main :: proc() {
 
 
 // =--- Handlers Start Here --------------------------------------------------->
+
+url :: proc(req: ^http.Request, res: ^http.Response) {
+	sb := strings.builder_make(context.temp_allocator)
+
+	fmt.sbprintf(&sb, "path        = %v\n", req.url.path)
+	fmt.sbprintf(&sb, "query       = %v\n", req.url.query)
+	fmt.sbprintf(&sb, "host header = %v\n", http.headers_get(req.headers, "host"))
+
+	http.respond_plain(res, strings.to_string(sb))
+}
 
 // Show the url parameters
 url_params :: proc(req: ^http.Request, res: ^http.Response) {
