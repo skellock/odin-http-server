@@ -10,21 +10,25 @@ import "core:time"
 server: http.Server
 router: http.Router
 
+// An example structure use for serialization.
 Person :: struct {
 	name:       string `json:"omg_name"`,
 	age:        int,
 	fav_colour: string `json:"favorite_color"`,
 }
 
+// Shows the IP address of the request.
 ip_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	remote_ip := net.address_to_string(req.client.address, context.temp_allocator)
 	http.respond_plain(res, remote_ip)
 }
 
+// Returns just a 200 status.
 up_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_with_status(res, .OK)
 }
 
+// Shows the peak memory used by the temp allocator.
 mem_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	temp_arena := (^mem.Arena)(context.temp_allocator.data)
 	content := fmt.tprintf(
@@ -34,6 +38,7 @@ mem_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_html(res, content)
 }
 
+// Prints the server's time (1-sec interval) and the request time in rfc3339.
 now_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	server_date := string(server.date.buf_backing[:])
 	real_date := time.time_to_rfc3339(time.now(), 0, false, context.temp_allocator) or_else "??"
@@ -41,6 +46,7 @@ now_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_html(res, content)
 }
 
+// Prints some json.
 json_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	steve := [?]Person {
 		Person{"Steve", 51, "gray"},
@@ -51,6 +57,7 @@ json_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_json(res, steve)
 }
 
+// Prints the number of bytes received via a POST.
 count_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	line, ok := req.line.?
 	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
@@ -65,6 +72,7 @@ count_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	})
 }
 
+// Echos what was sent in the POST request body.
 echo_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	line, ok := req.line.?
 	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
@@ -79,6 +87,7 @@ echo_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	})
 }
 
+// Parses the POST body as form encoded and prints that.
 form_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	line, ok := req.line.?
 	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
