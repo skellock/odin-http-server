@@ -18,7 +18,7 @@ Person :: struct {
 
 ip_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	remote_ip := net.address_to_string(req.client.address, context.temp_allocator)
-	http.respond_html(res, remote_ip)
+	http.respond_plain(res, remote_ip)
 }
 
 up_handler :: proc(req: ^http.Request, res: ^http.Response) {
