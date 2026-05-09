@@ -21,8 +21,8 @@ main :: proc() {
 	defer http.router_destroy(&router)
 
 	// configure the routes
-	http.route_get(&router, "/html", http.handler(html))
-	http.route_get(&router, "/liam", http.handler(liam))
+	http.route_get(&router, "/html", http.handler(html_file))
+	http.route_get(&router, "/inline", http.handler(inline_html))
 	http.route_get(&router, "/ip", http.handler(ip))
 	http.route_get(&router, "/up", http.handler(up))
 	http.route_get(&router, "/mem", http.handler(memory))
@@ -47,17 +47,18 @@ static_fallback :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_dir(res, "/", "public", req.url_params[0])
 }
 
-html :: proc(req: ^http.Request, res: ^http.Response) {
+// An HTML file on the filesystem with a MIME type.
+html_file :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_file(res, "public/fun.html", .Html)
 }
 
-liam :: proc(req: ^http.Request, res: ^http.Response) {
+// Inline
+inline_html :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_html(
 		res,
 		"<html><head><title>HELLO TITLE</title></head><body><h1>OMG HAI!</h1><p>Hello <b>Liam</b></p></body></html>",
 	)
 }
-
 
 // Shows the IP address of the request.
 ip :: proc(req: ^http.Request, res: ^http.Response) {
