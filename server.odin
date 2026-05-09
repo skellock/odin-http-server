@@ -17,19 +17,49 @@ Person :: struct {
 	fav_colour: string `json:"favorite_color"`,
 }
 
+main :: proc() {
+	http.server_shutdown_on_interrupt(&server)
+
+	port := 8080
+	endpoint := net.Endpoint{net.IP4_Any, port}
+
+	// the router
+	http.router_init(&router)
+	defer http.router_destroy(&router)
+
+	// configure the routes
+	http.route_get(&router, "/ip", http.handler(ip))
+	http.route_get(&router, "/up", http.handler(up))
+	http.route_get(&router, "/mem", http.handler(memory))
+	http.route_get(&router, "/now", http.handler(now))
+	http.route_get(&router, "/json", http.handler(json_output))
+	http.route_post(&router, "/count", http.handler(count))
+	http.route_post(&router, "/echo", http.handler(echo))
+	http.route_post(&router, "/form", http.handler(form))
+
+	// listen
+	fmt.printf("Listening on :%d\n", port)
+	root_handler := http.router_handler(&router)
+	http.listen_and_serve(&server, root_handler, endpoint)
+}
+
+
+// =--- Handlers Start Here --------------------------------------------------->
+
+
 // Shows the IP address of the request.
-ip_handler :: proc(req: ^http.Request, res: ^http.Response) {
+ip :: proc(req: ^http.Request, res: ^http.Response) {
 	remote_ip := net.address_to_string(req.client.address, context.temp_allocator)
 	http.respond_plain(res, remote_ip)
 }
 
 // Returns just a 200 status.
-up_handler :: proc(req: ^http.Request, res: ^http.Response) {
+up :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_with_status(res, .OK)
 }
 
 // Shows the peak memory used by the temp allocator.
-mem_handler :: proc(req: ^http.Request, res: ^http.Response) {
+memory :: proc(req: ^http.Request, res: ^http.Response) {
 	temp_arena := (^mem.Arena)(context.temp_allocator.data)
 	content := fmt.tprintf(
 		"temp allocator peak bytes used = %f mb",
@@ -39,7 +69,7 @@ mem_handler :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 // Prints the server's time (1-sec interval) and the request time in rfc3339.
-now_handler :: proc(req: ^http.Request, res: ^http.Response) {
+now :: proc(req: ^http.Request, res: ^http.Response) {
 	server_date := string(server.date.buf_backing[:])
 	real_date := time.time_to_rfc3339(time.now(), 0, false, context.temp_allocator) or_else "??"
 	content := fmt.tprintf("server_date = %s\nreal_date = %s", server_date, real_date)
@@ -47,7 +77,7 @@ now_handler :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 // Prints some json.
-json_handler :: proc(req: ^http.Request, res: ^http.Response) {
+json_output :: proc(req: ^http.Request, res: ^http.Response) {
 	steve := [?]Person {
 		Person{"Steve", 51, "gray"},
 		Person{"Myka", 51, "blue"},
@@ -58,7 +88,7 @@ json_handler :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 // Prints the number of bytes received via a POST.
-count_handler :: proc(req: ^http.Request, res: ^http.Response) {
+count :: proc(req: ^http.Request, res: ^http.Response) {
 	line, ok := req.line.?
 	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
 		res := cast(^http.Response)res
@@ -73,7 +103,7 @@ count_handler :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 // Echos what was sent in the POST request body.
-echo_handler :: proc(req: ^http.Request, res: ^http.Response) {
+echo :: proc(req: ^http.Request, res: ^http.Response) {
 	line, ok := req.line.?
 	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
 		res := cast(^http.Response)res
@@ -88,7 +118,7 @@ echo_handler :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 // Parses the POST body as form encoded and prints that.
-form_handler :: proc(req: ^http.Request, res: ^http.Response) {
+form :: proc(req: ^http.Request, res: ^http.Response) {
 	line, ok := req.line.?
 	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
 		res := cast(^http.Response)res
@@ -106,30 +136,4 @@ form_handler :: proc(req: ^http.Request, res: ^http.Response) {
 
 		http.respond_plain(res, strings.to_string(sb))
 	})
-}
-
-main :: proc() {
-	http.server_shutdown_on_interrupt(&server)
-
-	port := 8080
-	endpoint := net.Endpoint{net.IP4_Any, port}
-
-	// the router
-	http.router_init(&router)
-	defer http.router_destroy(&router)
-
-	// configure the routes
-	http.route_get(&router, "/ip", http.handler(ip_handler))
-	http.route_get(&router, "/up", http.handler(up_handler))
-	http.route_get(&router, "/mem", http.handler(mem_handler))
-	http.route_get(&router, "/now", http.handler(now_handler))
-	http.route_get(&router, "/json", http.handler(json_handler))
-	http.route_post(&router, "/count", http.handler(count_handler))
-	http.route_post(&router, "/echo", http.handler(echo_handler))
-	http.route_post(&router, "/form", http.handler(form_handler))
-
-	// listen
-	fmt.printf("Listening on :%d\n", port)
-	root_handler := http.router_handler(&router)
-	http.listen_and_serve(&server, root_handler, endpoint)
 }
