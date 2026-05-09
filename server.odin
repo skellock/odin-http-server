@@ -10,13 +10,6 @@ import "core:time"
 server: http.Server
 router: http.Router
 
-// An example structure use for serialization.
-Person :: struct {
-	name:       string `json:"omg_name"`,
-	age:        int,
-	fav_colour: string `json:"favorite_color"`,
-}
-
 main :: proc() {
 	http.server_shutdown_on_interrupt(&server)
 
@@ -78,6 +71,13 @@ now :: proc(req: ^http.Request, res: ^http.Response) {
 
 // Prints some json.
 json_output :: proc(req: ^http.Request, res: ^http.Response) {
+	// An example structure use for serialization.
+	Person :: struct {
+		name:       string `json:"omg_name"`,
+		age:        int,
+		fav_colour: string `json:"favorite_color"`,
+	}
+
 	steve := [?]Person {
 		Person{"Steve", 51, "gray"},
 		Person{"Myka", 51, "blue"},
