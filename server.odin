@@ -43,7 +43,7 @@ main :: proc() {
 
 
 html :: proc(req: ^http.Request, res: ^http.Response) {
-	http.respond_file(res, "./fun.html", .Html)
+	http.respond_file(res, "public/fun.html", .Html)
 }
 
 liam :: proc(req: ^http.Request, res: ^http.Response) {
