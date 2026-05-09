@@ -9,6 +9,12 @@ import "core:time"
 server: http.Server
 router: http.Router
 
+Person :: struct {
+	name:       string `json:"omg_name"`,
+	age:        int,
+	fav_colour: string `json:"favorite_color"`,
+}
+
 ip_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	remote_ip := net.address_to_string(req.client.address, context.temp_allocator)
 	http.respond_html(res, remote_ip)
@@ -34,6 +40,11 @@ now_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_html(res, content)
 }
 
+json_handler :: proc(req: ^http.Request, res: ^http.Response) {
+	steve := Person{"Steve", 51, "gray"}
+	http.respond_json(res, steve)
+}
+
 main :: proc() {
 	http.server_shutdown_on_interrupt(&server)
 
@@ -49,6 +60,7 @@ main :: proc() {
 	http.route_get(&router, "/up", http.handler(up_handler))
 	http.route_get(&router, "/mem", http.handler(mem_handler))
 	http.route_get(&router, "/now", http.handler(now_handler))
+	http.route_get(&router, "/json", http.handler(json_handler))
 
 	// listen
 	fmt.printf("Listening on :%d\n", port)
