@@ -42,7 +42,12 @@ now_handler :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 json_handler :: proc(req: ^http.Request, res: ^http.Response) {
-	steve := Person{"Steve", 51, "gray"}
+	steve := [?]Person {
+		Person{"Steve", 51, "gray"},
+		Person{"Myka", 51, "blue"},
+		Person{"Liam", 14, "purple"},
+		Person{"Matthew", 11, "teal"},
+	}
 	http.respond_json(res, steve)
 }
 
