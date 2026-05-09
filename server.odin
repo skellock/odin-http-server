@@ -31,6 +31,7 @@ main :: proc() {
 	http.route_post(&router, "/count", http.handler(count))
 	http.route_post(&router, "/echo", http.handler(echo))
 	http.route_post(&router, "/form", http.handler(form))
+	http.route_get(&router, "(.*)", http.handler(static_fallback))
 
 	// listen
 	fmt.printf("Listening on :%d\n", port)
@@ -41,6 +42,10 @@ main :: proc() {
 
 // =--- Handlers Start Here --------------------------------------------------->
 
+// A static directory fallback for all requests
+static_fallback :: proc(req: ^http.Request, res: ^http.Response) {
+	http.respond_dir(res, "/", "public", req.url_params[0])
+}
 
 html :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_file(res, "public/fun.html", .Html)
