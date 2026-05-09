@@ -21,6 +21,7 @@ main :: proc() {
 	defer http.router_destroy(&router)
 
 	// configure the routes
+	http.route_get(&router, "/headers", http.handler(headers))
 	http.route_get(&router, "/html", http.handler(html_file))
 	http.route_get(&router, "/inline", http.handler(inline_html))
 	http.route_get(&router, "/ip", http.handler(ip))
@@ -41,6 +42,17 @@ main :: proc() {
 
 
 // =--- Handlers Start Here --------------------------------------------------->
+
+headers :: proc(req: ^http.Request, res: ^http.Response) {
+	sb := strings.builder_make(context.temp_allocator)
+
+	fmt.sbprintf(&sb, "Request Headers:\n\n")
+	for header in req.headers._kv {
+		fmt.sbprintf(&sb, "%v = %v\n", header, http.headers_get(req.headers, header))
+	}
+
+	http.respond_plain(res, strings.to_string(sb))
+}
 
 // A static directory fallback for all requests
 static_fallback :: proc(req: ^http.Request, res: ^http.Response) {
