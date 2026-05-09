@@ -22,6 +22,7 @@ main :: proc() {
 
 	// configure the routes
 	http.route_get(&router, "/html", http.handler(html))
+	http.route_get(&router, "/liam", http.handler(liam))
 	http.route_get(&router, "/ip", http.handler(ip))
 	http.route_get(&router, "/up", http.handler(up))
 	http.route_get(&router, "/mem", http.handler(memory))
@@ -44,6 +45,14 @@ main :: proc() {
 html :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_file(res, "./fun.html", .Html)
 }
+
+liam :: proc(req: ^http.Request, res: ^http.Response) {
+	http.respond_html(
+		res,
+		"<html><head><title>HELLO TITLE</title></head><body><h1>OMG HAI!</h1><p>Hello <b>Liam</b></p></body></html>",
+	)
+}
+
 
 // Shows the IP address of the request.
 ip :: proc(req: ^http.Request, res: ^http.Response) {
