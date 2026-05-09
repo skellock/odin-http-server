@@ -4,6 +4,7 @@ import http "./odin-http"
 import "core:fmt"
 import "core:mem"
 import "core:net"
+import "core:strings"
 import "core:time"
 
 server: http.Server
@@ -45,6 +46,54 @@ json_handler :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_json(res, steve)
 }
 
+count_handler :: proc(req: ^http.Request, res: ^http.Response) {
+	line, ok := req.line.?
+	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
+		res := cast(^http.Response)res
+
+		if err != nil {
+			http.respond(res, http.body_error_status(err))
+			return
+		}
+
+		http.respond_plain(res, fmt.tprintf("%d", len(body)))
+	})
+}
+
+echo_handler :: proc(req: ^http.Request, res: ^http.Response) {
+	line, ok := req.line.?
+	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
+		res := cast(^http.Response)res
+
+		if err != nil {
+			http.respond(res, http.body_error_status(err))
+			return
+		}
+
+		http.respond_plain(res, body)
+	})
+}
+
+form_handler :: proc(req: ^http.Request, res: ^http.Response) {
+	line, ok := req.line.?
+	http.body(req, -1, res, proc(res: rawptr, body: http.Body, err: http.Body_Error) {
+		res := cast(^http.Response)res
+
+		if err != nil {
+			http.respond(res, http.body_error_status(err))
+			return
+		}
+
+		sb := strings.builder_make(context.temp_allocator)
+		ma, ok := http.body_url_encoded(body)
+		for k, v in ma {
+			fmt.sbprintf(&sb, "%s = %v\n", k, v)
+		}
+
+		http.respond_plain(res, strings.to_string(sb))
+	})
+}
+
 main :: proc() {
 	http.server_shutdown_on_interrupt(&server)
 
@@ -61,6 +110,9 @@ main :: proc() {
 	http.route_get(&router, "/mem", http.handler(mem_handler))
 	http.route_get(&router, "/now", http.handler(now_handler))
 	http.route_get(&router, "/json", http.handler(json_handler))
+	http.route_post(&router, "/count", http.handler(count_handler))
+	http.route_post(&router, "/echo", http.handler(echo_handler))
+	http.route_post(&router, "/form", http.handler(form_handler))
 
 	// listen
 	fmt.printf("Listening on :%d\n", port)
