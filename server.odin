@@ -78,13 +78,21 @@ json_output :: proc(req: ^http.Request, res: ^http.Response) {
 		fav_colour: string `json:"favorite_color"`,
 	}
 
-	steve := [?]Person {
-		Person{"Steve", 51, "gray"},
-		Person{"Myka", 51, "blue"},
-		Person{"Liam", 14, "purple"},
-		Person{"Matthew", 11, "teal"},
+	Family :: struct {
+		last_name: string,
+		people:    []Person,
 	}
-	http.respond_json(res, steve)
+
+	fam := Family {
+		last_name = "Kellock",
+		people    = {
+			Person{"Steve", 51, "gray"},
+			Person{"Myka", 51, "blue"},
+			Person{"Liam", 14, "purple"},
+			Person{"Matthew", 11, "teal"},
+		},
+	}
+	http.respond_json(res, fam, .OK, {pretty = true, use_spaces = true, spaces = 2})
 }
 
 // Prints the number of bytes received via a POST.
