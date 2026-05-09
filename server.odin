@@ -21,6 +21,7 @@ main :: proc() {
 	defer http.router_destroy(&router)
 
 	// configure the routes
+	http.route_get(&router, "/html", http.handler(html))
 	http.route_get(&router, "/ip", http.handler(ip))
 	http.route_get(&router, "/up", http.handler(up))
 	http.route_get(&router, "/mem", http.handler(memory))
@@ -39,6 +40,10 @@ main :: proc() {
 
 // =--- Handlers Start Here --------------------------------------------------->
 
+
+html :: proc(req: ^http.Request, res: ^http.Response) {
+	http.respond_file(res, "./fun.html", .Html)
+}
 
 // Shows the IP address of the request.
 ip :: proc(req: ^http.Request, res: ^http.Response) {
