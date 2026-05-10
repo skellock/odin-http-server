@@ -20,7 +20,11 @@ router: http.Router
 // entry point
 main :: proc() {
 	configure_arguments()
+
+	http.router_init(&router)
 	configure_routes()
+	defer http.router_destroy(&router)
+
 	serve()
 }
 
@@ -35,9 +39,6 @@ configure_arguments :: proc() {
 
 // setup the router
 configure_routes :: proc() {
-	http.router_init(&router)
-	defer http.router_destroy(&router)
-	
 	// odinfmt: disable
 	http.route_get  ( &router, "/url",                http.handler(url)         )
 	http.route_get  ( &router, "/params/(%w+)/(%w+)", http.handler(url_params)  )
