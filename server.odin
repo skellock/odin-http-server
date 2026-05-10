@@ -39,20 +39,20 @@ configure_routes :: proc() {
 	defer http.router_destroy(&router)
 	
 	// odinfmt: disable
-	http.route_get (  &router, "/url",                http.handler(url))
-	http.route_get (  &router, "/params/(%w+)/(%w+)", http.handler(url_params))
-	http.route_get (  &router, "/headers",            http.handler(headers))
-	http.route_get (  &router, "/html",               http.handler(html_file))
-	http.route_get (  &router, "/inline",             http.handler(inline_html))
-	http.route_get (  &router, "/ip",                 http.handler(ip))
-	http.route_get (  &router, "/up",                 http.handler(up))
-	http.route_get (  &router, "/mem",                http.handler(memory))
-	http.route_get (  &router, "/now",                http.handler(now))
-	http.route_get (  &router, "/json",               http.handler(json_output))
-	http.route_post(  &router, "/count",              http.handler(count))
-	http.route_post(  &router, "/echo",               http.handler(echo))
-	http.route_post(  &router, "/form",               http.handler(form))
-	http.route_get (  &router, "(.*)",                http.handler(static_fallback))
+	http.route_get  ( &router, "/url",                http.handler(url)         )
+	http.route_get  ( &router, "/params/(%w+)/(%w+)", http.handler(url_params)  )
+	http.route_get  ( &router, "/headers",            http.handler(headers)     )
+	http.route_get  ( &router, "/html",               http.handler(html_file)   )
+	http.route_get  ( &router, "/inline",             http.handler(inline_html) )
+	http.route_get  ( &router, "/ip",                 http.handler(ip)          )
+	http.route_get  ( &router, "/up",                 http.handler(up)          )
+	http.route_get  ( &router, "/mem",                http.handler(memory)      )
+	http.route_get  ( &router, "/now",                http.handler(now)         )
+	http.route_get  ( &router, "/json",               http.handler(json_output) )
+	http.route_post ( &router, "/count",              http.handler(count)       )
+	http.route_post ( &router, "/echo",               http.handler(echo)        )
+	http.route_post ( &router, "/form",               http.handler(form)        )
+	http.route_get  ( &router, "(.*)",                http.handler(static)      )
 	// odinfmt: enable
 }
 
@@ -132,7 +132,7 @@ headers :: proc(req: ^http.Request, res: ^http.Response) {
 }
 
 // A static directory fallback for all requests
-static_fallback :: proc(req: ^http.Request, res: ^http.Response) {
+static :: proc(req: ^http.Request, res: ^http.Response) {
 	http.respond_dir(res, "/", "public", req.url_params[0])
 }
 
