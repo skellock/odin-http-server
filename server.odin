@@ -1,47 +1,95 @@
 package server
 
 import http "./odin-http"
+import "core:flags"
 import "core:fmt"
 import "core:mem"
 import "core:net"
+import "core:os"
 import "core:strings"
 import "core:time"
 
+Options :: struct {
+	port: int `usage:"Which port to listen on. (default: 8080)"`,
+}
+
+opt: Options
 server: http.Server
 router: http.Router
 
+// entry point
 main :: proc() {
-	http.server_shutdown_on_interrupt(&server)
-
-	port := 8080
-	endpoint := net.Endpoint{net.IP4_Any, port}
-
-	// the router
-	http.router_init(&router)
-	defer http.router_destroy(&router)
-
-	// configure the routes
-	http.route_get(&router, "/url", http.handler(url))
-	http.route_get(&router, "/params/(%w+)/(%w+)", http.handler(url_params))
-	http.route_get(&router, "/headers", http.handler(headers))
-	http.route_get(&router, "/html", http.handler(html_file))
-	http.route_get(&router, "/inline", http.handler(inline_html))
-	http.route_get(&router, "/ip", http.handler(ip))
-	http.route_get(&router, "/up", http.handler(up))
-	http.route_get(&router, "/mem", http.handler(memory))
-	http.route_get(&router, "/now", http.handler(now))
-	http.route_get(&router, "/json", http.handler(json_output))
-	http.route_post(&router, "/count", http.handler(count))
-	http.route_post(&router, "/echo", http.handler(echo))
-	http.route_post(&router, "/form", http.handler(form))
-	http.route_get(&router, "(.*)", http.handler(static_fallback))
-
-	// listen
-	fmt.printf("Listening on :%d\n", port)
-	root_handler := http.router_handler(&router)
-	http.listen_and_serve(&server, root_handler, endpoint)
+	configure_arguments()
+	configure_routes()
+	serve()
 }
 
+// read the command line arguments
+configure_arguments :: proc() {
+	flags.parse_or_exit(&opt, os.args, .Unix)
+
+	if opt.port == 0 {
+		opt.port = 8080
+	}
+}
+
+// setup the router
+configure_routes :: proc() {
+	http.router_init(&router)
+	defer http.router_destroy(&router)
+	
+	// odinfmt: disable
+	http.route_get (  &router, "/url",                http.handler(url))
+	http.route_get (  &router, "/params/(%w+)/(%w+)", http.handler(url_params))
+	http.route_get (  &router, "/headers",            http.handler(headers))
+	http.route_get (  &router, "/html",               http.handler(html_file))
+	http.route_get (  &router, "/inline",             http.handler(inline_html))
+	http.route_get (  &router, "/ip",                 http.handler(ip))
+	http.route_get (  &router, "/up",                 http.handler(up))
+	http.route_get (  &router, "/mem",                http.handler(memory))
+	http.route_get (  &router, "/now",                http.handler(now))
+	http.route_get (  &router, "/json",               http.handler(json_output))
+	http.route_post(  &router, "/count",              http.handler(count))
+	http.route_post(  &router, "/echo",               http.handler(echo))
+	http.route_post(  &router, "/form",               http.handler(form))
+	http.route_get (  &router, "(.*)",                http.handler(static_fallback))
+	// odinfmt: enable
+}
+
+// fire up the server and listen
+serve :: proc() {
+	http.server_shutdown_on_interrupt(&server)
+
+	// try to listen
+	endpoint := net.Endpoint{net.IP4_Any, opt.port}
+	listen_err := http.listen(&server, endpoint)
+
+	if listen_err != nil {
+		switch listen_err {
+		case net.Bind_Error.Insufficient_Permissions_For_Address:
+			fmt.printf("Error: insufficient permissions to listen on port %d\n", endpoint.port)
+			if endpoint.port < 1024 {
+				fmt.printf("Error: root user is required to listen on ports 1-1023\n")
+			}
+
+		case net.Bind_Error.Address_In_Use:
+			fmt.printf("Error: port %d is being used by another process.\n", endpoint.port)
+
+		case:
+			fmt.printf("Error: %v\n", listen_err)
+		}
+		return
+	}
+
+	// try to serve
+	fmt.printf("Listening on :%d\n", endpoint.port)
+	root_handler := http.router_handler(&router)
+	serve_err := http.serve(&server, root_handler)
+
+	if serve_err != nil {
+		fmt.printf("Error %v\n", listen_err)
+	}
+}
 
 // =--- Handlers Start Here --------------------------------------------------->
 
