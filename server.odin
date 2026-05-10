@@ -28,7 +28,7 @@ main :: proc() {
 configure_arguments :: proc() {
 	flags.parse_or_exit(&opt, os.args, .Unix)
 
-	if opt.port == 0 {
+	if opt.port <= 0 {
 		opt.port = 8080
 	}
 }
