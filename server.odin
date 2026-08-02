@@ -197,9 +197,12 @@ json_output :: proc(req: ^http.Request, res: ^http.Response) {
 		last_name = "Kellock",
 		people    = {
 			Person{"Steve", 51, "gray"},
-			Person{"Myka", 51, "blue"},
+			Person{"Myka", 52, "blue"},
 			Person{"Liam", 14, "purple"},
-			Person{"Matthew", 11, "teal"},
+			Person{"Matthew", 12, "teal"},
+			Person{"Coraline", 1, "black"},
+			Person{"June", 6, "white"},
+			Person{"Wilson", 7, "any"},
 		},
 	}
 	http.respond_json(res, fam, .OK, {pretty = true, use_spaces = true, spaces = 2})
