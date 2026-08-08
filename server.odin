@@ -53,6 +53,7 @@ configure_routes :: proc() {
 	http.route_post ( &router, "/count",              http.handler(count)       )
 	http.route_post ( &router, "/echo",               http.handler(echo)        )
 	http.route_post ( &router, "/form",               http.handler(form)        )
+	http.route_get  ( &router, "/",                   http.handler(html_file)   )
 	http.route_get  ( &router, "(.*)",                http.handler(static)      )
 	// odinfmt: enable
 }
